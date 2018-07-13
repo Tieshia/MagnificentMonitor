@@ -3,7 +3,7 @@
 ## Installation
 
  1. Install Python
- 2. `pip install twisted`
+ 2. `pip install -r requirements.txt`
  3. `python server.py`
  4. Okay, now you're running Magnificent!
  5. Visit http://localhost:12345 in a web browser or something.

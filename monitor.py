@@ -58,6 +58,7 @@ def monitoring(url, secs, error_threshold, level=logging.DEBUG):
         # Notify when server health first exceeds error threshold
         if failure_rate > error_threshold and healthy:
             healthy = False
+            # **Version 2.0: Find way to send this log as Slack notification**
             logging.warning("Exceeding error threshold of {}. Current: {}".format(
                 str(error_threshold), str(failure_rate)))
         # Notify when server health returns to normal parameters
@@ -82,6 +83,19 @@ def monitoring(url, secs, error_threshold, level=logging.DEBUG):
             # Set index for attempt to 1
             status[idx] = 1.0
             logging.debug("HTTPError: {}". format(str(e.code)))
+
+
+def error_threshold_logic(is_healthy, failure_rate, error_threshold):
+    """Logic for testing error threshold."""
+
+    # Notify when server health first exceeds error threshold
+    if failure_rate > error_threshold and is_healthy:
+        is_healthy = False
+    # Notify when server health returns to normal parameters
+    elif failure_rate < error_threshold and not is_healthy:
+        is_healthy = True
+
+    return is_healthy
 
 
 def arguments_reader():
