@@ -70,13 +70,12 @@ def monitoring(url, secs, error_threshold, level=logging.DEBUG):
 
 
 def write_pid_file():
-    pid = str(os.get_pid())
+    pid = str(os.getpid())
     if os.path.exists(pidfile):
         sys.exit(1)
     else:
         with open(pidfile, 'w') as f:
-            f.write(pid)
-            
+            f.write(pid)            
 
 
 def arguments_reader():
@@ -89,25 +88,21 @@ def arguments_reader():
     operation = args.operation
     return operation
 
-# Run daemon process in background
-# with daemon.DaemonContext():
-#     monitoring(url, 1, 0.25, logging.DEBUG)
 
 if __name__ == "__main__":
     
     action = arguments_reader()
 
     if action == 'start':
-        print "Starting monitor.py."
         with daemon.DaemonContext():
             monitoring(url, 1, 0.25, logging.DEBUG)
-            
+        # monitoring(url, 1, 0.25, logging.DEBUG)
+
     if action == 'stop':
-        print "Stopping monitor.py"
         if not os.path.exists(pidfile):
             sys.exit(1)
         else:
             with open(pidfile, 'r') as f:
                 pid = f.readline().strip()
-            os.kill(pid, signal.SIGTERM)
+            os.kill(int(pid), signal.SIGTERM)
             os.remove(dirpath + '/pidfile.txt')
