@@ -1,17 +1,24 @@
 import urllib2
 import logging
 import daemon
-import os
+import os, sys
+import signal
+import argparse
+import os.path
 
 import time
 
 dirpath = os.getcwd()
+pidfile = dirpath + '/pidfile.txt'
 
 url = "http://localhost:12345"
 
 def monitoring(url, secs, error_threshold, level=logging.DEBUG):
     """Function for monitoring health of Magnificent server."""
 
+    # Write pidfile
+    write_pid_file()
+    
     # Initialize attempt counter
     counter = 0
 
@@ -61,6 +68,46 @@ def monitoring(url, secs, error_threshold, level=logging.DEBUG):
             status[idx] = 1.0 
             logging.debug("HTTPError: {}". format(str(e.code)))
 
+
+def write_pid_file():
+    pid = str(os.get_pid())
+    if os.path.exists(pidfile):
+        sys.exit(1)
+    else:
+        with open(pidfile, 'w') as f:
+            f.write(pid)
+            
+
+
+def arguments_reader():
+
+    parser = argparse.ArgumentParser(description='Run daemon for monitoring Magnificent server.')
+    parser.add_argument('operation', 
+        help='Operation with monitor daemon. Accepts "start" or "stop" as values.',
+        choices=['start', 'stop'])
+    args = parser.parse_args()
+    operation = args.operation
+    return operation
+
 # Run daemon process in background
-with daemon.DaemonContext():
-    monitoring(url, 1, 0.25, logging.DEBUG)
+# with daemon.DaemonContext():
+#     monitoring(url, 1, 0.25, logging.DEBUG)
+
+if __name__ == "__main__":
+    
+    action = arguments_reader()
+
+    if action == 'start':
+        print "Starting monitor.py."
+        with daemon.DaemonContext():
+            monitoring(url, 1, 0.25, logging.DEBUG)
+            
+    if action == 'stop':
+        print "Stopping monitor.py"
+        if not os.path.exists(pidfile):
+            sys.exit(1)
+        else:
+            with open(pidfile, 'r') as f:
+                pid = f.readline().strip()
+            os.kill(pid, signal.SIGTERM)
+            os.remove(dirpath + '/pidfile.txt')
